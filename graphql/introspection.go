@@ -1,64 +1,88 @@
 package graphql
 
 // https://spec.graphql.org/October2021/#sec-Schema-Introspection
-type __Schema struct {
+type Schema struct {
 	Description      string
-	Types            []__Type
-	QueryType        *__Type
-	MutationType     *__Type
-	SubscriptionType *__Type
-	Directives       []__Directive
+	Types            []Type
+	QueryType        *Type
+	MutationType     *Type
+	SubscriptionType *Type
+	Directives       []Directive
 }
 
-type __Type struct {
+func (Schema) String() string {
+	return "__Schema"
+}
+
+type Type struct {
 	Kind        __TypeKind
 	Name        *string
 	Description *string
 	// T_OBJECT and T_INTERFACE only
-	Fields func(isDeprecatedArgs) []__Field
+	Fields func(isDeprecatedArgs) []Field
 	// T_OBJECT only
-	Interfaces []__Type
+	Interfaces []Type
 	// T_INTERFACE and T_UNION only
-	PossibleTypes func() []__Type
+	PossibleTypes func() []Type
 	// T_ENUM only
-	EnumValues func(isDeprecatedArgs) []__EnumValue
+	EnumValues func(isDeprecatedArgs) []EnumValue
 	// T_INPUT_OBJECT only
-	InputFields func() []__InputValue
+	InputFields func() []InputValue
 	// T_NON_NULL and T_LIST only
-	OfType *__Type
+	OfType *Type
 	// T_SCALAR only
 	SpecifiedByURL *string
 }
 
-type __Directive struct {
+func (Type) String() string {
+	return "__Type"
+}
+
+type Directive struct {
 	Name         string
 	Description  *string
 	Locations    []__DirectiveLocation
-	Args         []__InputValue
+	Args         []InputValue
 	IsRepeatable bool
 }
 
-type __Field struct {
+func (Directive) String() string {
+	return "__Directive"
+}
+
+type Field struct {
 	Name              string
 	Description       *string
-	Args              []__InputValue
-	Type              __Type
+	Args              []InputValue
+	Type              Type
 	IsDeprecated      bool
 	DeprecationReason *string
 }
 
-type __InputValue struct {
+func (Field) String() string {
+	return "__Field"
+}
+
+type InputValue struct {
 	Name         string
 	Description  *string
-	Type         __Type
+	Type         Type
 	DefaultValue *string
 }
 
-type __EnumValue struct {
+func (InputValue) String() string {
+	return "__InputValue"
+}
+
+type EnumValue struct {
 	Name              string
 	Description       string
 	IsDeprecated      bool
 	DeprecationReason string
+}
+
+func (EnumValue) String() string {
+	return "__EnumValue"
 }
 
 type isDeprecatedArgs struct {

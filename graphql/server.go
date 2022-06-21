@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func Handler(schema *Schema) http.Handler {
+func Handler() http.Handler {
 	upgrader := &websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -21,11 +21,5 @@ func Handler(schema *Schema) http.Handler {
 			return
 		}
 		defer socket.Close()
-
-		//makeCtx := func(ctx context.Context) context.Context {
-		//	return ctx
-		//}
-
-		//ServeJSONSocket(r.Context(), socket, schema, makeCtx, &simpleLogger{})
 	})
 }
