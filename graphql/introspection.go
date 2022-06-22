@@ -1,7 +1,7 @@
 package graphql
 
 // https://spec.graphql.org/October2021/#sec-Schema-Introspection
-type IType interface {
+type Node interface {
 	Alias() string
 }
 
