@@ -97,7 +97,7 @@ const (
 	TK_INTERFACE
 	TK_UNION
 	TK_ENUM
-	TK_INPUOBJECT
+	TK_INPUT_OBJECT
 	TK_LIST
 	TK_NON_NULL
 )
@@ -114,8 +114,8 @@ func (my TypeKind) String() string {
 		return "UNION"
 	case TK_ENUM:
 		return "ENUM"
-	case TK_INPUOBJECT:
-		return "INPUOBJECT"
+	case TK_INPUT_OBJECT:
+		return "INPUT_OBJECT"
 	case TK_LIST:
 		return "LIST"
 	case TK_NON_NULL:
@@ -148,8 +148,8 @@ const (
 	DL_UNION
 	DL_ENUM
 	DL_ENUM_VALUE
-	DL_INPUOBJECT
-	DL_INPUFIELD_DEFINITION
+	DL_INPUT_OBJECT
+	DL_INPUT_FIELD_DEFINITION
 )
 
 func (my DirectiveLocation) String() string {
@@ -186,10 +186,10 @@ func (my DirectiveLocation) String() string {
 		return "ENUM"
 	case DL_ENUM_VALUE:
 		return "ENUM_VALUE"
-	case DL_INPUOBJECT:
-		return "INPUOBJECT"
-	case DL_INPUFIELD_DEFINITION:
-		return "INPUFIELD_DEFINITION"
+	case DL_INPUT_OBJECT:
+		return "INPUT_OBJECT"
+	case DL_INPUT_FIELD_DEFINITION:
+		return "INPUT_FIELD_DEFINITION"
 	default:
 		return ""
 	}
