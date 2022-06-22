@@ -18,19 +18,19 @@ type Type struct {
 	Kind        TypeKind
 	Name        *string
 	Description *string
-	// T_OBJECT and T_INTERFACE only
+	// OBJECT and INTERFACE only
 	Fields func(isDeprecatedArgs) []Field
-	// T_OBJECT only
+	// OBJECT only
 	Interfaces []Type
-	// T_INTERFACE and T_UNION only
+	// INTERFACE and UNION only
 	PossibleTypes func() []Type
-	// T_ENUM only
+	// ENUM only
 	EnumValues func(isDeprecatedArgs) []EnumValue
-	// T_INPUT_OBJECT only
+	// INPUOBJECT only
 	InputFields func() []InputValue
-	// T_NON_NULL and T_LIST only
+	// NON_NULL and LIST only
 	OfType *Type
-	// T_SCALAR only
+	// SCALAR only
 	SpecifiedByURL *string
 }
 
@@ -97,7 +97,7 @@ const (
 	TK_INTERFACE
 	TK_UNION
 	TK_ENUM
-	TK_INPUT_OBJECT
+	TK_INPUOBJECT
 	TK_LIST
 	TK_NON_NULL
 )
@@ -114,8 +114,8 @@ func (my TypeKind) String() string {
 		return "UNION"
 	case TK_ENUM:
 		return "ENUM"
-	case TK_INPUT_OBJECT:
-		return "INPUT_OBJECT"
+	case TK_INPUOBJECT:
+		return "INPUOBJECT"
 	case TK_LIST:
 		return "LIST"
 	case TK_NON_NULL:
@@ -136,20 +136,20 @@ const (
 	DL_MUTATION
 	DL_SUBSCRIPTION
 	DL_FIELD
-	DL_FRAGMENT_DEFINITION
-	DL_FRAGMENT_SPREAD
+	DL_FRAGMENDEFINITION
+	DL_FRAGMENSPREAD
 	DL_INLINE_FRAGMENT
 	DL_SCHEMA
 	DL_SCALAR
 	DL_OBJECT
 	DL_FIELD_DEFINITION
-	DL_ARGUMENT_DEFINITION
+	DL_ARGUMENDEFINITION
 	DL_INTERFACE
 	DL_UNION
 	DL_ENUM
 	DL_ENUM_VALUE
-	DL_INPUT_OBJECT
-	DL_INPUT_FIELD_DEFINITION
+	DL_INPUOBJECT
+	DL_INPUFIELD_DEFINITION
 )
 
 func (my DirectiveLocation) String() string {
@@ -162,10 +162,10 @@ func (my DirectiveLocation) String() string {
 		return "SUBSCRIPTION"
 	case DL_FIELD:
 		return "FIELD"
-	case DL_FRAGMENT_DEFINITION:
-		return "FRAGMENT_DEFINITION"
-	case DL_FRAGMENT_SPREAD:
-		return "FRAGMENT_SPREAD"
+	case DL_FRAGMENDEFINITION:
+		return "FRAGMENDEFINITION"
+	case DL_FRAGMENSPREAD:
+		return "FRAGMENSPREAD"
 	case DL_INLINE_FRAGMENT:
 		return "INLINE_FRAGMENT"
 	case DL_SCHEMA:
@@ -174,8 +174,8 @@ func (my DirectiveLocation) String() string {
 		return "SCALAR"
 	case DL_FIELD_DEFINITION:
 		return "FIELD_DEFINITION"
-	case DL_ARGUMENT_DEFINITION:
-		return "ARGUMENT_DEFINITION"
+	case DL_ARGUMENDEFINITION:
+		return "ARGUMENDEFINITION"
 	case DL_INTERFACE:
 		return "INTERFACE"
 	case DL_UNION:
@@ -186,10 +186,10 @@ func (my DirectiveLocation) String() string {
 		return "ENUM"
 	case DL_ENUM_VALUE:
 		return "ENUM_VALUE"
-	case DL_INPUT_OBJECT:
-		return "INPUT_OBJECT"
-	case DL_INPUT_FIELD_DEFINITION:
-		return "INPUT_FIELD_DEFINITION"
+	case DL_INPUOBJECT:
+		return "INPUOBJECT"
+	case DL_INPUFIELD_DEFINITION:
+		return "INPUFIELD_DEFINITION"
 	default:
 		return ""
 	}
