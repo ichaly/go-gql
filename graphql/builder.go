@@ -1,9 +1,10 @@
-package builder
+package graphql
 
 import (
 	"fmt"
-	"github.com/ichaly/go-gql/graphql"
+	"github.com/ichaly/go-gql/graphql/internal"
 	"reflect"
+	"time"
 )
 
 type SchemaBuilder struct {
@@ -105,7 +106,7 @@ func getEnumMap(enumMap interface{}, typ reflect.Type) (map[string]interface{}, 
 	return eMap, rMap
 }
 
-func (my *SchemaBuilder) Build() (*graphql.Schema, error) {
+func (my *SchemaBuilder) Build() (*Schema, error) {
 	my.Object("Query", query{})
 	my.Object("Mutation", mutation{})
 	for _, object := range my.objects {
@@ -128,13 +129,13 @@ func (my *SchemaBuilder) Build() (*graphql.Schema, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &graphql.Schema{
+	return &Schema{
 		QueryType:    &queryTyp,
 		MutationType: &mutationTyp,
 	}, nil
 }
 
-func (my *SchemaBuilder) MustBuild() *graphql.Schema {
+func (my *SchemaBuilder) MustBuild() *Schema {
 	schema, err := my.Build()
 	if err != nil {
 		panic(err)
@@ -153,23 +154,51 @@ func (my *SchemaBuilder) getEnum(typ reflect.Type) (string, []string, bool) {
 	return "", nil, false
 }
 
-func (my *SchemaBuilder) getType(nodeType reflect.Type) (graphql.Type, error) {
-	// Support scalars and optional scalars. Scalars have precedence over structs
-	// to have eg. time.Time function as a scalar.
+var scalars = map[reflect.Type]string{
+	reflect.TypeOf(bool(false)): "bool",
+	reflect.TypeOf(int(0)):      "int",
+	reflect.TypeOf(int8(0)):     "int8",
+	reflect.TypeOf(int16(0)):    "int16",
+	reflect.TypeOf(int32(0)):    "int32",
+	reflect.TypeOf(int64(0)):    "int64",
+	reflect.TypeOf(uint(0)):     "uint",
+	reflect.TypeOf(uint8(0)):    "uint8",
+	reflect.TypeOf(uint16(0)):   "uint16",
+	reflect.TypeOf(uint32(0)):   "uint32",
+	reflect.TypeOf(uint64(0)):   "uint64",
+	reflect.TypeOf(float32(0)):  "float32",
+	reflect.TypeOf(float64(0)):  "float64",
+	reflect.TypeOf(string("")):  "string",
+	reflect.TypeOf(time.Time{}): "Time",
+	reflect.TypeOf([]byte{}):    "bytes",
+}
+
+func getScalar(typ reflect.Type) (string, bool) {
+	for match, name := range scalars {
+		if internal.TypesIdenticalOrScalarAliases(match, typ) {
+			return name, true
+		}
+	}
+	return "", false
+}
+
+func (my *SchemaBuilder) getType(nodeType reflect.Type) (IType, error) {
 	if typeName, values, ok := my.getEnum(nodeType); ok {
-		return &graphql.NonNull{
-			Type: &graphql.Enum{
-				Type: typeName, Values: values, ReverseMap: my.enums[nodeType].ReverseMap
-			}
+		return &NonNull{
+			Type: &Enum{
+				Type:       typeName,
+				Values:     values,
+				ReverseMap: my.enums[nodeType].ReverseMap,
+			},
 		}, nil
 	}
 
 	if typeName, ok := getScalar(nodeType); ok {
-		return &graphql.NonNull{Type: &graphql.Scalar{Type: typeName}}, nil
+		return &NonNull{Type: &Scalar{Type: typeName}}, nil
 	}
 	if nodeType.Kind() == reflect.Ptr {
 		if typeName, ok := getScalar(nodeType.Elem()); ok {
-			return &graphql.Scalar{Type: typeName}, nil // XXX: prefix typ with "*"
+			return &Scalar{Type: typeName}, nil // XXX: prefix typ with "*"
 		}
 	}
 
@@ -182,7 +211,7 @@ func (my *SchemaBuilder) getType(nodeType reflect.Type) (graphql.Type, error) {
 		if err := my.buildStruct(nodeType); err != nil {
 			return nil, err
 		}
-		return &graphql.NonNull{Type: my.types[nodeType]}, nil
+		return &NonNull{Type: my.types[nodeType]}, nil
 	}
 	if nodeType.Kind() == reflect.Ptr && nodeType.Elem().Kind() == reflect.Struct {
 		if err := my.buildStruct(nodeType.Elem()); err != nil {
@@ -199,11 +228,11 @@ func (my *SchemaBuilder) getType(nodeType reflect.Type) (graphql.Type, error) {
 		}
 
 		// Wrap all slice elements in NonNull.
-		if _, ok := elementType.(*graphql.NonNull); !ok {
-			elementType = &graphql.NonNull{Type: elementType}
+		if _, ok := elementType.(*NonNull); !ok {
+			elementType = &NonNull{Type: elementType}
 		}
 
-		return &graphql.NonNull{Type: &graphql.List{Type: elementType}}, nil
+		return &NonNull{Type: &List{Type: elementType}}, nil
 
 	default:
 		return nil, fmt.Errorf("bad type %s: should be a scalar, slice, or struct type", nodeType)

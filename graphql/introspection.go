@@ -10,12 +10,12 @@ type Schema struct {
 	Directives       []Directive
 }
 
-func (Schema) String() string {
+func (Schema) Alias() string {
 	return "__Schema"
 }
 
 type Type struct {
-	Kind        __TypeKind
+	Kind        TypeKind
 	Name        *string
 	Description *string
 	// T_OBJECT and T_INTERFACE only
@@ -34,19 +34,19 @@ type Type struct {
 	SpecifiedByURL *string
 }
 
-func (Type) String() string {
+func (Type) Alias() string {
 	return "__Type"
 }
 
 type Directive struct {
 	Name         string
 	Description  *string
-	Locations    []__DirectiveLocation
+	Locations    []DirectiveLocation
 	Args         []InputValue
 	IsRepeatable bool
 }
 
-func (Directive) String() string {
+func (Directive) Alias() string {
 	return "__Directive"
 }
 
@@ -59,7 +59,7 @@ type Field struct {
 	DeprecationReason *string
 }
 
-func (Field) String() string {
+func (Field) Alias() string {
 	return "__Field"
 }
 
@@ -70,7 +70,7 @@ type InputValue struct {
 	DefaultValue *string
 }
 
-func (InputValue) String() string {
+func (InputValue) Alias() string {
 	return "__InputValue"
 }
 
@@ -81,7 +81,7 @@ type EnumValue struct {
 	DeprecationReason string
 }
 
-func (EnumValue) String() string {
+func (EnumValue) Alias() string {
 	return "__EnumValue"
 }
 
@@ -89,10 +89,10 @@ type isDeprecatedArgs struct {
 	IncludeDeprecated bool `json:"includeDeprecated"`
 }
 
-type __TypeKind uint8
+type TypeKind uint8
 
 const (
-	TK_SCALAR __TypeKind = iota
+	TK_SCALAR TypeKind = iota
 	TK_OBJECT
 	TK_INTERFACE
 	TK_UNION
@@ -102,7 +102,7 @@ const (
 	TK_NON_NULL
 )
 
-func (my __TypeKind) String() string {
+func (my TypeKind) String() string {
 	switch my {
 	case TK_SCALAR:
 		return "SCALAR"
@@ -125,10 +125,14 @@ func (my __TypeKind) String() string {
 	}
 }
 
-type __DirectiveLocation uint8
+func (TypeKind) Alias() string {
+	return "__TypeKind"
+}
+
+type DirectiveLocation uint8
 
 const (
-	DL_QUERY __DirectiveLocation = iota
+	DL_QUERY DirectiveLocation = iota
 	DL_MUTATION
 	DL_SUBSCRIPTION
 	DL_FIELD
@@ -148,7 +152,7 @@ const (
 	DL_INPUT_FIELD_DEFINITION
 )
 
-func (my __DirectiveLocation) String() string {
+func (my DirectiveLocation) String() string {
 	switch my {
 	case DL_QUERY:
 		return "QUERY"
@@ -189,4 +193,8 @@ func (my __DirectiveLocation) String() string {
 	default:
 		return ""
 	}
+}
+
+func (DirectiveLocation) Alias() string {
+	return "__DirectiveLocation"
 }

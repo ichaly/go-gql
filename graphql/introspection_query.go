@@ -41,7 +41,7 @@ fragment FullType on IType {
 	interfaces {
 		...TypeRef
 	}
-	enumValues(includeDeprecated: true) {
+	Values(includeDeprecated: true) {
 		name
 		description
 		isDeprecated

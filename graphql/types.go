@@ -1,7 +1,17 @@
 package graphql
 
+import "fmt"
+
+type IType interface {
+	Alias() string
+}
+
 type NonNull struct {
-	Type Type
+	Type IType
+}
+
+func (my *NonNull) Alias() string {
+	return fmt.Sprintf("%s!", my.Type)
 }
 
 type Enum struct {
@@ -10,12 +20,15 @@ type Enum struct {
 	ReverseMap map[interface{}]string
 }
 
-func (e *Enum) isType() {}
-
-func (e *Enum) String() string {
-	return e.Type
+func (my *Enum) Alias() string {
+	return my.Type
 }
 
-func (e *Enum) enumValues() []string {
-	return e.Values
+type Scalar struct {
+	Type      string
+	UnWrapper func(interface{}) (interface{}, error)
+}
+
+func (s *Scalar) Alias() string {
+	return s.Type
 }
