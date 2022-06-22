@@ -96,33 +96,33 @@ type isDeprecatedArgs struct {
 type TypeKind uint8
 
 const (
-	TK_SCALAR TypeKind = iota
-	TK_OBJECT
-	TK_INTERFACE
-	TK_UNION
-	TK_ENUM
-	TK_INPUT_OBJECT
-	TK_LIST
-	TK_NON_NULL
+	SCALAR TypeKind = iota
+	OBJECT
+	INTERFACE
+	UNION
+	ENUM
+	INPUT_OBJECT
+	LIST
+	NON_NULL
 )
 
 func (my TypeKind) String() string {
 	switch my {
-	case TK_SCALAR:
+	case SCALAR:
 		return "SCALAR"
-	case TK_OBJECT:
+	case OBJECT:
 		return "OBJECT"
-	case TK_INTERFACE:
+	case INTERFACE:
 		return "INTERFACE"
-	case TK_UNION:
+	case UNION:
 		return "UNION"
-	case TK_ENUM:
+	case ENUM:
 		return "ENUM"
-	case TK_INPUT_OBJECT:
+	case INPUT_OBJECT:
 		return "INPUT_OBJECT"
-	case TK_LIST:
+	case LIST:
 		return "LIST"
-	case TK_NON_NULL:
+	case NON_NULL:
 		return "NON_NULL"
 	default:
 		return ""

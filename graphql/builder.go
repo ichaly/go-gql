@@ -9,6 +9,7 @@ type SchemaBuilder struct {
 	Name    string
 	enums   map[reflect.Type]*Enum
 	objects map[reflect.Type]*Object
+	types   map[reflect.Type]*Type
 }
 
 type BuildOption interface {
@@ -116,13 +117,13 @@ func (my *SchemaBuilder) MustBuild() *Schema {
 	return schema
 }
 
-func (my *SchemaBuilder) getType(nodeType reflect.Type) (IType, error) {
+func (my *SchemaBuilder) getType(nodeType reflect.Type) (*Type, error) {
 	// Structs
 	if nodeType.Kind() == reflect.Struct {
 		if err := my.buildStruct(nodeType); err != nil {
 			return nil, err
 		}
-		return &NonNull{Type: my.types[nodeType]}, nil
+		return &Type{Kind: NON_NULL, OfType: my.types[nodeType]}, nil
 	}
 	if nodeType.Kind() == reflect.Ptr && nodeType.Elem().Kind() == reflect.Struct {
 		if err := my.buildStruct(nodeType.Elem()); err != nil {
@@ -130,9 +131,16 @@ func (my *SchemaBuilder) getType(nodeType reflect.Type) (IType, error) {
 		}
 		return my.types[nodeType.Elem()], nil
 	}
-
-	switch nodeType.Kind() {
-	default:
-		return nil, fmt.Errorf("bad type %s: should be a scalar, slice, or struct type", nodeType)
+	if nodeType.Kind() == reflect.Slice {
+		elementType, err := my.getType(nodeType.Elem())
+		if err != nil {
+			return nil, err
+		}
+		return &Type{Kind: NON_NULL, OfType: &Type{Kind: LIST, OfType: elementType}}, nil
 	}
+	return nil, fmt.Errorf("bad type %s: should be a scalar, slice, or struct type", nodeType)
+}
+
+func (sb *SchemaBuilder) buildStruct(typ reflect.Type) error {
+	return nil
 }
