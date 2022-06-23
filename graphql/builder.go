@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"fmt"
+	"github.com/ichaly/go-gql/internal/introspection"
 	"reflect"
 )
 
@@ -9,7 +10,7 @@ type SchemaBuilder struct {
 	Name    string
 	enums   map[reflect.Type]*Enum
 	objects map[reflect.Type]*Object
-	types   map[reflect.Type]*Type
+	types   map[reflect.Type]*introspection.Type
 }
 
 type BuildOption interface {
@@ -100,16 +101,16 @@ func getEnumMap(enumMap interface{}, typ reflect.Type) (map[string]interface{}, 
 	return eMap, rMap
 }
 
-func (my *SchemaBuilder) Build() (*Schema, error) {
+func (my *SchemaBuilder) Build() (*introspection.Schema, error) {
 	my.Object("Query", query{})
 	my.Object("Mutation", mutation{})
-	return &Schema{
+	return &introspection.Schema{
 		QueryType:    nil,
 		MutationType: nil,
 	}, nil
 }
 
-func (my *SchemaBuilder) MustBuild() *Schema {
+func (my *SchemaBuilder) MustBuild() *introspection.Schema {
 	schema, err := my.Build()
 	if err != nil {
 		panic(err)
@@ -117,13 +118,13 @@ func (my *SchemaBuilder) MustBuild() *Schema {
 	return schema
 }
 
-func (my *SchemaBuilder) getType(nodeType reflect.Type) (*Type, error) {
+func (my *SchemaBuilder) getType(nodeType reflect.Type) (*introspection.Type, error) {
 	// Structs
 	if nodeType.Kind() == reflect.Struct {
 		if err := my.buildStruct(nodeType); err != nil {
 			return nil, err
 		}
-		return &Type{Kind: NON_NULL, OfType: my.types[nodeType]}, nil
+		return &introspection.Type{Kind: introspection.NON_NULL, OfType: my.types[nodeType]}, nil
 	}
 	if nodeType.Kind() == reflect.Ptr && nodeType.Elem().Kind() == reflect.Struct {
 		if err := my.buildStruct(nodeType.Elem()); err != nil {
@@ -136,7 +137,7 @@ func (my *SchemaBuilder) getType(nodeType reflect.Type) (*Type, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &Type{Kind: NON_NULL, OfType: &Type{Kind: LIST, OfType: elementType}}, nil
+		return &introspection.Type{Kind: introspection.NON_NULL, OfType: &introspection.Type{Kind: introspection.LIST, OfType: elementType}}, nil
 	}
 	return nil, fmt.Errorf("bad type %s: should be a scalar, slice, or struct type", nodeType)
 }

@@ -1,4 +1,4 @@
-package graphql
+package introspection
 
 // Copied from https://github.com/graphql/graphiql/blob/master/src/utility/introspectionQueries.js
 const IntrospectionQuery = `
