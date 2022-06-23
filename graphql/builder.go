@@ -3,6 +3,7 @@ package graphql
 import (
 	"fmt"
 	"github.com/ichaly/go-gql/internal/introspection"
+	"github.com/ichaly/go-gql/internal/introspection/kind"
 	"reflect"
 )
 
@@ -124,7 +125,7 @@ func (my *SchemaBuilder) getType(nodeType reflect.Type) (*introspection.Type, er
 		if err := my.buildStruct(nodeType); err != nil {
 			return nil, err
 		}
-		return &introspection.Type{Kind: introspection.NON_NULL, OfType: my.types[nodeType]}, nil
+		return &introspection.Type{Kind: kind.NON_NULL, OfType: my.types[nodeType]}, nil
 	}
 	if nodeType.Kind() == reflect.Ptr && nodeType.Elem().Kind() == reflect.Struct {
 		if err := my.buildStruct(nodeType.Elem()); err != nil {
@@ -137,7 +138,7 @@ func (my *SchemaBuilder) getType(nodeType reflect.Type) (*introspection.Type, er
 		if err != nil {
 			return nil, err
 		}
-		return &introspection.Type{Kind: introspection.NON_NULL, OfType: &introspection.Type{Kind: introspection.LIST, OfType: elementType}}, nil
+		return &introspection.Type{Kind: kind.NON_NULL, OfType: &introspection.Type{Kind: kind.LIST, OfType: elementType}}, nil
 	}
 	return nil, fmt.Errorf("bad type %s: should be a scalar, slice, or struct type", nodeType)
 }
