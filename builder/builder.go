@@ -143,6 +143,6 @@ func (my *SchemaBuilder) getType(nodeType reflect.Type) (*introspection.Type, er
 	return nil, fmt.Errorf("bad type %s: should be a scalar, slice, or struct type", nodeType)
 }
 
-func (sb *SchemaBuilder) buildStruct(typ reflect.Type) error {
+func (my *SchemaBuilder) buildStruct(typ reflect.Type) error {
 	return nil
 }
