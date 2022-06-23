@@ -61,11 +61,7 @@ func (s *Server) getTransport(r *http.Request) Transport {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			//err := s.exec.PresentRecoveredError(r.Context(), err)
-			//resp := &graphql.Response{Errors: []*gqlerror.Error{err}}
-			//b, _ := json.Marshal(resp)
-			//w.WriteHeader(http.StatusUnprocessableEntity)
-			//_, _ = w.Write(b)
+			errors.SendErrorf(w, http.StatusUnprocessableEntity, "internal system error")
 		}
 	}()
 
