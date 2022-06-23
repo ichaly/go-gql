@@ -20,7 +20,7 @@ type Schema struct {
 }
 
 func (Schema) Alias() string {
-	return "__Schema"
+	return "Schema"
 }
 
 type Type struct {

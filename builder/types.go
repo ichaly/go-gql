@@ -1,4 +1,4 @@
-package graphql
+package builder
 
 type Object struct {
 	Name        string // Optional, defaults to Type's name.
