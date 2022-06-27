@@ -5,7 +5,7 @@ import (
 	"github.com/ichaly/go-gql/internal/introspection/location"
 )
 
-// https://spec.graphql.org/October2021/#sec-Schema-Introspection
+// Node https://spec.graphql.org/October2021/#sec-Schema-Introspection
 type Node interface {
 	Alias() string
 }
@@ -20,7 +20,7 @@ type Schema struct {
 }
 
 func (Schema) Alias() string {
-	return "Schema"
+	return "__Schema"
 }
 
 type Type struct {
