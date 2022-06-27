@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"encoding/json"
 	"github.com/ichaly/go-gql/errors"
 	"github.com/ichaly/go-gql/transport"
 	"net/http"
@@ -28,6 +29,11 @@ type (
 	TraceTiming struct {
 		Start time.Time
 		End   time.Time
+	}
+	Response struct {
+		Errors     []*errors.QueryError   `json:"errors,omitempty"`
+		Data       json.RawMessage        `json:"data,omitempty"`
+		Extensions map[string]interface{} `json:"extensions,omitempty"`
 	}
 )
 
