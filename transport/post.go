@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"github.com/ichaly/go-gql/executor"
 	"github.com/ichaly/go-gql/types"
 	"github.com/ichaly/go-gql/util"
 	"mime"
@@ -24,7 +25,7 @@ func (h POST) Supports(r *http.Request) bool {
 	return r.Method == "POST" && mediaType == "application/json"
 }
 
-func (h POST) Do(w http.ResponseWriter, r *http.Request, exec *types.Executor) {
+func (h POST) Do(w http.ResponseWriter, r *http.Request, exec *executor.Executor) {
 	w.Header().Set("Content-Type", "application/json")
 
 	start := util.Now()

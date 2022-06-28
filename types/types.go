@@ -3,18 +3,16 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ichaly/go-gql/internal/introspection"
+	"github.com/ichaly/go-gql/executor"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"net/http"
 	"time"
 )
 
 type (
-	Executor struct {
-		introspection.Schema
-	}
 	Transport interface {
 		Supports(r *http.Request) bool
-		Do(w http.ResponseWriter, r *http.Request, exec *Executor)
+		Do(w http.ResponseWriter, r *http.Request, exec *executor.Executor)
 	}
 	TraceTiming struct {
 		Start time.Time
@@ -29,33 +27,20 @@ type (
 
 		ReadTime TraceTiming `json:"-"`
 	}
-	GqlResponse struct {
-		Errors     []*GqlError            `json:"errors,omitempty"`
+	GqlResult struct {
 		Data       json.RawMessage        `json:"data,omitempty"`
+		Errors     gqlerror.List          `json:"errors,omitempty"`
 		Extensions map[string]interface{} `json:"extensions,omitempty"`
-	}
-	GqlError struct {
-		Err           error                  `json:"-"` // Err holds underlying if available
-		Message       string                 `json:"message"`
-		Locations     []Location             `json:"locations,omitempty"`
-		Path          []interface{}          `json:"path,omitempty"`
-		Rule          string                 `json:"-"`
-		ResolverError error                  `json:"-"`
-		Extensions    map[string]interface{} `json:"extensions,omitempty"`
-	}
-	Location struct {
-		Line   int `json:"line"`
-		Column int `json:"column"`
 	}
 )
 
 func SendErrorf(w http.ResponseWriter, code int, format string, args ...interface{}) {
-	SendError(w, code, &GqlError{Message: fmt.Sprintf(format, args...)})
+	SendError(w, code, &gqlerror.Error{Message: fmt.Sprintf(format, args...)})
 }
 
-func SendError(w http.ResponseWriter, code int, errors ...*GqlError) {
+func SendError(w http.ResponseWriter, code int, errors ...*gqlerror.Error) {
 	w.WriteHeader(code)
-	b, err := json.Marshal(&GqlResponse{Errors: errors})
+	b, err := json.Marshal(&GqlResult{Errors: errors})
 	if err != nil {
 		panic(err)
 	}

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/ichaly/go-gql/internal/introspection"
 	"github.com/ichaly/go-gql/internal/introspection/kind"
-	types2 "github.com/ichaly/go-gql/types"
+	"github.com/ichaly/go-gql/types"
 	"reflect"
 )
 
 type SchemaBuilder struct {
 	Name    string
-	enums   map[reflect.Type]*types2.Enum
-	objects map[reflect.Type]*types2.Object
+	enums   map[reflect.Type]*types.Enum
+	objects map[reflect.Type]*types.Object
 	types   map[reflect.Type]*introspection.Type
 }
 
@@ -21,7 +21,7 @@ type BuildOption interface {
 
 func NewSchemaBuilder(options ...BuildOption) *SchemaBuilder {
 	builder := &SchemaBuilder{
-		objects: make(map[reflect.Type]*types2.Object),
+		objects: make(map[reflect.Type]*types.Object),
 	}
 	for _, o := range options {
 		o.apply(builder)
@@ -31,28 +31,28 @@ func NewSchemaBuilder(options ...BuildOption) *SchemaBuilder {
 
 type query struct{}
 
-func (my *SchemaBuilder) Query() *types2.Object {
+func (my *SchemaBuilder) Query() *types.Object {
 	return my.Object("Query", query{})
 }
 
 type mutation struct{}
 
-func (my *SchemaBuilder) Mutation() *types2.Object {
+func (my *SchemaBuilder) Mutation() *types.Object {
 	return my.Object("Mutation", mutation{})
 }
 
 type ObjectOption interface {
-	apply(*SchemaBuilder, *types2.Object)
+	apply(*SchemaBuilder, *types.Object)
 }
 
-func (my *SchemaBuilder) Object(name string, typ interface{}, options ...ObjectOption) *types2.Object {
+func (my *SchemaBuilder) Object(name string, typ interface{}, options ...ObjectOption) *types.Object {
 	if object, ok := my.objects[reflect.TypeOf(typ)]; ok {
 		if reflect.TypeOf(object.Type) != reflect.TypeOf(typ) {
 			panic("re-registered object with different type")
 		}
 		return object
 	}
-	object := &types2.Object{
+	object := &types.Object{
 		Name:        name,
 		Type:        typ,
 		ServiceName: my.Name,
@@ -69,10 +69,10 @@ func (my *SchemaBuilder) Object(name string, typ interface{}, options ...ObjectO
 func (my *SchemaBuilder) Enum(val interface{}, enumMap interface{}) {
 	typ := reflect.TypeOf(val)
 	if my.enums == nil {
-		my.enums = make(map[reflect.Type]*types2.Enum)
+		my.enums = make(map[reflect.Type]*types.Enum)
 	}
 	eMap, rMap := getEnumMap(enumMap, typ)
-	my.enums[typ] = &types2.Enum{Map: eMap, ReverseMap: rMap}
+	my.enums[typ] = &types.Enum{Map: eMap, ReverseMap: rMap}
 }
 
 func getEnumMap(enumMap interface{}, typ reflect.Type) (map[string]interface{}, map[interface{}]string) {

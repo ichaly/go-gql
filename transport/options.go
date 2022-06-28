@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"github.com/ichaly/go-gql/types"
+	"github.com/ichaly/go-gql/executor"
 	"net/http"
 	"strings"
 )
@@ -16,7 +16,7 @@ func (o Options) Supports(r *http.Request) bool {
 	return r.Method == "HEAD" || r.Method == "OPTIONS"
 }
 
-func (o Options) Do(w http.ResponseWriter, r *http.Request, exec *types.Executor) {
+func (o Options) Do(w http.ResponseWriter, r *http.Request, exec *executor.Executor) {
 	switch r.Method {
 	case http.MethodOptions:
 		w.Header().Set("Allow", o.allowedMethods())

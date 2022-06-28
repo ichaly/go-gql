@@ -15,7 +15,7 @@ func ReadJson(r io.Reader, val interface{}) error {
 	return dec.Decode(val)
 }
 
-func WriteJson(w io.Writer, response *types.GqlResponse) {
+func WriteJson(w io.Writer, response *types.GqlResult) {
 	b, err := json.Marshal(response)
 	if err != nil {
 		panic(err)

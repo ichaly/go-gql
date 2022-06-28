@@ -13,6 +13,6 @@ func (s *Schema) Exec(
 	queryString string,
 	operationName string,
 	variables map[string]interface{},
-) *types.GqlResponse {
+) *types.GqlResult {
 	return nil
 }

@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"github.com/ichaly/go-gql/executor"
 	"github.com/ichaly/go-gql/types"
 	"github.com/ichaly/go-gql/util"
 	"net/http"
@@ -19,7 +20,7 @@ func (h GET) Supports(r *http.Request) bool {
 	return r.Method == "GET"
 }
 
-func (h GET) Do(w http.ResponseWriter, r *http.Request, exec *types.Executor) {
+func (h GET) Do(w http.ResponseWriter, r *http.Request, exec *executor.Executor) {
 	w.Header().Set("Content-Type", "application/json")
 
 	start := util.Now()
@@ -44,7 +45,6 @@ func (h GET) Do(w http.ResponseWriter, r *http.Request, exec *types.Executor) {
 		Start: start,
 		End:   util.Now(),
 	}
-
 	//rc, err := exec.CreateOperationContext(r.Context(), params)
 	//if err != nil {
 	//	w.WriteHeader(statusFor(err))
