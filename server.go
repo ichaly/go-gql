@@ -2,8 +2,8 @@ package graphql
 
 import (
 	"encoding/json"
-	"github.com/ichaly/go-gql/errors"
 	"github.com/ichaly/go-gql/transport"
+	"github.com/ichaly/go-gql/types"
 	"net/http"
 	"time"
 )
@@ -17,7 +17,11 @@ type (
 		transports []Transport
 		exec       *Executor
 	}
-	RawParams struct {
+	TraceTiming struct {
+		Start time.Time
+		End   time.Time
+	}
+	GqlRequest struct {
 		Query         string                 `json:"query"`
 		OperationName string                 `json:"operationName"`
 		Variables     map[string]interface{} `json:"variables"`
@@ -26,18 +30,12 @@ type (
 
 		ReadTime TraceTiming `json:"-"`
 	}
-	TraceTiming struct {
-		Start time.Time
-		End   time.Time
-	}
-	Response struct {
-		Errors     []*errors.QueryError   `json:"errors,omitempty"`
+	GqlResponse struct {
+		Errors     []*types.GqlError      `json:"errors,omitempty"`
 		Data       json.RawMessage        `json:"data,omitempty"`
 		Extensions map[string]interface{} `json:"extensions,omitempty"`
 	}
 )
-
-var Now = time.Now
 
 func NewServer() *Server {
 	srv := &Server{
@@ -67,7 +65,7 @@ func (s *Server) getTransport(r *http.Request) Transport {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			errors.SendErrorf(w, http.StatusUnprocessableEntity, "internal system error")
+			types.SendErrorf(w, http.StatusUnprocessableEntity, "internal system error")
 		}
 	}()
 
@@ -76,5 +74,5 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errors.SendErrorf(w, http.StatusBadRequest, "transport not supported")
+	types.SendErrorf(w, http.StatusBadRequest, "transport not supported")
 }

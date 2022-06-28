@@ -1,13 +1,13 @@
-package errors
+package types
 
 import (
 	"encoding/json"
 	"fmt"
-	graphql "github.com/ichaly/go-gql"
+	"github.com/ichaly/go-gql"
 	"net/http"
 )
 
-type QueryError struct {
+type GqlError struct {
 	Err           error                  `json:"-"` // Err holds underlying if available
 	Message       string                 `json:"message"`
 	Locations     []Location             `json:"locations,omitempty"`
@@ -23,12 +23,12 @@ type Location struct {
 }
 
 func SendErrorf(w http.ResponseWriter, code int, format string, args ...interface{}) {
-	SendError(w, code, &QueryError{Message: fmt.Sprintf(format, args...)})
+	SendError(w, code, &GqlError{Message: fmt.Sprintf(format, args...)})
 }
 
-func SendError(w http.ResponseWriter, code int, errors ...*QueryError) {
+func SendError(w http.ResponseWriter, code int, errors ...*GqlError) {
 	w.WriteHeader(code)
-	b, err := json.Marshal(&graphql.Response{Errors: errors})
+	b, err := json.Marshal(&graphql.GqlResponse{Errors: errors})
 	if err != nil {
 		panic(err)
 	}

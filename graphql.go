@@ -7,6 +7,6 @@ import (
 type Schema struct {
 }
 
-func (s *Schema) Exec(ctx context.Context, queryString string, operationName string, variables map[string]interface{}) *Response {
+func (s *Schema) Exec(ctx context.Context, queryString string, operationName string, variables map[string]interface{}) *GqlResponse {
 	return nil
 }

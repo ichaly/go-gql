@@ -2,7 +2,8 @@ package transport
 
 import (
 	"github.com/ichaly/go-gql"
-	"github.com/ichaly/go-gql/errors"
+	"github.com/ichaly/go-gql/types"
+	"github.com/ichaly/go-gql/util"
 	"net/http"
 	"strings"
 )
@@ -24,27 +25,27 @@ func (h GET) Supports(r *http.Request) bool {
 func (h GET) Do(w http.ResponseWriter, r *http.Request, exec *graphql.Executor) {
 	w.Header().Set("Content-Type", "application/json")
 
-	start := graphql.Now()
-	params := &graphql.RawParams{
+	start := util.Now()
+	params := &graphql.GqlRequest{
 		Query:         r.URL.Query().Get("query"),
 		OperationName: r.URL.Query().Get("operationName"),
 		Headers:       r.Header,
 	}
 	if variables := r.URL.Query().Get("variables"); variables != "" {
-		if err := readJson(strings.NewReader(variables), &params.Variables); err != nil {
-			errors.SendErrorf(w, http.StatusBadRequest, "variables could not be decoded")
+		if err := util.ReadJson(strings.NewReader(variables), &params.Variables); err != nil {
+			types.SendErrorf(w, http.StatusBadRequest, "variables could not be decoded")
 			return
 		}
 	}
 	if extensions := r.URL.Query().Get("extensions"); extensions != "" {
-		if err := readJson(strings.NewReader(extensions), &params.Extensions); err != nil {
-			errors.SendErrorf(w, http.StatusBadRequest, "extensions could not be decoded")
+		if err := util.ReadJson(strings.NewReader(extensions), &params.Extensions); err != nil {
+			types.SendErrorf(w, http.StatusBadRequest, "extensions could not be decoded")
 			return
 		}
 	}
 	params.ReadTime = graphql.TraceTiming{
 		Start: start,
-		End:   graphql.Now(),
+		End:   util.Now(),
 	}
 
 	//rc, err := exec.CreateOperationContext(r.Context(), params)

@@ -2,7 +2,8 @@ package transport
 
 import (
 	graphql "github.com/ichaly/go-gql"
-	"github.com/ichaly/go-gql/errors"
+	"github.com/ichaly/go-gql/types"
+	"github.com/ichaly/go-gql/util"
 	"mime"
 	"net/http"
 )
@@ -29,16 +30,16 @@ func (h POST) Supports(r *http.Request) bool {
 func (h POST) Do(w http.ResponseWriter, r *http.Request, exec *graphql.Executor) {
 	w.Header().Set("Content-Type", "application/json")
 
-	start := graphql.Now()
-	var params *graphql.RawParams
-	if err := readJson(r.Body, &params); err != nil {
-		errors.SendErrorf(w, http.StatusBadRequest, "json body could not be decoded: "+err.Error())
+	start := util.Now()
+	var params *graphql.GqlRequest
+	if err := util.ReadJson(r.Body, &params); err != nil {
+		types.SendErrorf(w, http.StatusBadRequest, "json body could not be decoded: "+err.Error())
 		return
 	}
 	params.Headers = r.Header
 	params.ReadTime = graphql.TraceTiming{
 		Start: start,
-		End:   graphql.Now(),
+		End:   util.Now(),
 	}
 
 	//rc, err := exec.CreateOperationContext(r.Context(), params)

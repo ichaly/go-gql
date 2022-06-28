@@ -1,18 +1,21 @@
-package transport
+package util
 
 import (
 	"encoding/json"
 	"github.com/ichaly/go-gql"
 	"io"
+	"time"
 )
 
-func readJson(r io.Reader, val interface{}) error {
+var Now = time.Now
+
+func ReadJson(r io.Reader, val interface{}) error {
 	dec := json.NewDecoder(r)
 	dec.UseNumber()
 	return dec.Decode(val)
 }
 
-func writeJson(w io.Writer, response *graphql.Response) {
+func WriteJson(w io.Writer, response *graphql.GqlResponse) {
 	b, err := json.Marshal(response)
 	if err != nil {
 		panic(err)
