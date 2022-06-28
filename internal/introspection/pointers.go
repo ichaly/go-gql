@@ -1,4 +1,4 @@
-package util
+package introspection
 
 // CheckStrPtr returns a pointer to a string or returns a nil pointer if v is empty
 func CheckStrPtr(v string) *string {

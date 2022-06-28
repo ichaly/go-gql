@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"github.com/ichaly/go-gql"
 	"github.com/ichaly/go-gql/types"
 	"github.com/ichaly/go-gql/util"
 	"net/http"
@@ -12,8 +11,6 @@ import (
 // defined in https://github.com/APIs-guru/graphql-over-http#get
 type GET struct{}
 
-var _ graphql.Transport = GET{}
-
 func (h GET) Supports(r *http.Request) bool {
 	if r.Header.Get("Upgrade") != "" {
 		return false
@@ -22,11 +19,11 @@ func (h GET) Supports(r *http.Request) bool {
 	return r.Method == "GET"
 }
 
-func (h GET) Do(w http.ResponseWriter, r *http.Request, exec *graphql.Executor) {
+func (h GET) Do(w http.ResponseWriter, r *http.Request, exec *types.Executor) {
 	w.Header().Set("Content-Type", "application/json")
 
 	start := util.Now()
-	params := &graphql.GqlRequest{
+	params := &types.GqlRequest{
 		Query:         r.URL.Query().Get("query"),
 		OperationName: r.URL.Query().Get("operationName"),
 		Headers:       r.Header,
@@ -43,7 +40,7 @@ func (h GET) Do(w http.ResponseWriter, r *http.Request, exec *graphql.Executor) 
 			return
 		}
 	}
-	params.ReadTime = graphql.TraceTiming{
+	params.ReadTime = types.TraceTiming{
 		Start: start,
 		End:   util.Now(),
 	}

@@ -2,7 +2,7 @@ package util
 
 import (
 	"encoding/json"
-	"github.com/ichaly/go-gql"
+	"github.com/ichaly/go-gql/types"
 	"io"
 	"time"
 )
@@ -15,7 +15,7 @@ func ReadJson(r io.Reader, val interface{}) error {
 	return dec.Decode(val)
 }
 
-func WriteJson(w io.Writer, response *graphql.GqlResponse) {
+func WriteJson(w io.Writer, response *types.GqlResponse) {
 	b, err := json.Marshal(response)
 	if err != nil {
 		panic(err)

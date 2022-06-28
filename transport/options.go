@@ -1,7 +1,7 @@
 package transport
 
 import (
-	graphql "github.com/ichaly/go-gql"
+	"github.com/ichaly/go-gql/types"
 	"net/http"
 	"strings"
 )
@@ -12,13 +12,11 @@ type Options struct {
 	AllowedMethods []string
 }
 
-var _ graphql.Transport = Options{}
-
 func (o Options) Supports(r *http.Request) bool {
 	return r.Method == "HEAD" || r.Method == "OPTIONS"
 }
 
-func (o Options) Do(w http.ResponseWriter, r *http.Request, exec *graphql.Executor) {
+func (o Options) Do(w http.ResponseWriter, r *http.Request, exec *types.Executor) {
 	switch r.Method {
 	case http.MethodOptions:
 		w.Header().Set("Allow", o.allowedMethods())
