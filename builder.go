@@ -153,13 +153,13 @@ func getSchema(o *Object) string {
 	sb.WriteString(" { ")
 	sb.WriteRune('\n')
 	for k, v := range o.Resolvers {
-		sb.WriteString(getDescription(v.Description))
-		sb.WriteString(k)
-		sb.WriteString(": ")
 		t, n, i := getType(reflect.TypeOf(v.Type))
 		if t == nil {
 			continue
 		}
+		sb.WriteString(getDescription(v.Description))
+		sb.WriteString(k)
+		sb.WriteString(": ")
 		if i {
 			sb.WriteString("[")
 		}
