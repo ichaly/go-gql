@@ -2,13 +2,31 @@ package graphql
 
 import (
 	"github.com/ichaly/go-gql/internal/introspection"
-	"github.com/ichaly/go-gql/types"
 	"reflect"
 )
 
+type Object struct {
+	key         string // Optional, defaults 'ID'.
+	Name        string // Optional, defaults to Type's name.
+	Description string
+	Type        interface{}
+	Methods     map[string]interface{}
+}
+
+func (s *Object) Field(name string, method interface{}) {
+	if s.Methods == nil {
+		s.Methods = make(map[string]interface{})
+	}
+
+	if _, ok := s.Methods[name]; ok {
+		panic("duplicate Method")
+	}
+	s.Methods[name] = method
+}
+
 type Builder struct {
 	Name    string
-	objects map[reflect.Type]*types.Object
+	objects map[reflect.Type]*Object
 }
 
 type BuildOption interface {
@@ -17,7 +35,7 @@ type BuildOption interface {
 
 func NewBuilder(options ...BuildOption) *Builder {
 	builder := &Builder{
-		objects: make(map[reflect.Type]*types.Object),
+		objects: make(map[reflect.Type]*Object),
 	}
 	for _, o := range options {
 		o.apply(builder)
@@ -27,31 +45,30 @@ func NewBuilder(options ...BuildOption) *Builder {
 
 type query struct{}
 
-func (my *Builder) Query() *types.Object {
+func (my *Builder) Query() *Object {
 	return my.Object("Query", query{})
 }
 
 type mutation struct{}
 
-func (my *Builder) Mutation() *types.Object {
+func (my *Builder) Mutation() *Object {
 	return my.Object("Mutation", mutation{})
 }
 
 type ObjectOption interface {
-	apply(*Builder, *types.Object)
+	apply(*Builder, *Object)
 }
 
-func (my *Builder) Object(name string, typ interface{}, options ...ObjectOption) *types.Object {
+func (my *Builder) Object(name string, typ interface{}, options ...ObjectOption) *Object {
 	if object, ok := my.objects[reflect.TypeOf(typ)]; ok {
 		if reflect.TypeOf(object.Type) != reflect.TypeOf(typ) {
 			panic("re-registered object with different type")
 		}
 		return object
 	}
-	object := &types.Object{
-		Name:        name,
-		Type:        typ,
-		ServiceName: my.Name,
+	object := &Object{
+		Name: name,
+		Type: typ,
 	}
 	my.objects[reflect.TypeOf(typ)] = object
 

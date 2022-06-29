@@ -6,10 +6,6 @@ import (
 )
 
 // Node https://spec.graphql.org/October2021/#sec-Schema-Introspection
-type Node interface {
-	Alias() string
-}
-
 type Schema struct {
 	Description      string
 	Types            []Type

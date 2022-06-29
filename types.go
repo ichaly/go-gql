@@ -14,3 +14,7 @@ type Enum interface {
 	String() string
 	Values() []string
 }
+
+type Node interface {
+	Alias() string
+}
