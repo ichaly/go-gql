@@ -122,6 +122,28 @@ func getDescription(desc string) string {
 	return sb.String()
 }
 
+func getType(t reflect.Type) (result reflect.Type, nullable bool, iterable bool) {
+	switch t.Kind() {
+	case reflect.Struct:
+		result = t
+		return
+	case reflect.Ptr:
+		result = t.Elem()
+		nullable = true
+		return
+	case reflect.Map, reflect.Slice, reflect.Array:
+		result = t.Elem()
+		iterable = true
+		return
+	case reflect.Func:
+		if t.NumOut() == 0 {
+			panic("Resolver func must have at least one return value")
+		}
+		return getType(t.Out(0))
+	}
+	return
+}
+
 func getSchema(o *Object) string {
 	sb := &strings.Builder{}
 	sb.WriteString(getDescription(o.Description))
@@ -134,19 +156,20 @@ func getSchema(o *Object) string {
 		sb.WriteString(getDescription(v.Description))
 		sb.WriteString(k)
 		sb.WriteString(": ")
-		t := reflect.TypeOf(v.Type)
-		switch t.Kind() {
-		case reflect.Ptr:
-			t = t.Elem() // follow indirection
-		case reflect.Map, reflect.Slice, reflect.Array:
-			t = t.Elem()
-		case reflect.Func:
-			if t.NumOut() == 0 {
-				panic("Resolver func must have at least one return value")
-			}
-			t = t.Out(0)
+		t, n, i := getType(reflect.TypeOf(v.Type))
+		if t == nil {
+			continue
+		}
+		if i {
+			sb.WriteString("[")
 		}
 		sb.WriteString(t.Name())
+		if n {
+			sb.WriteString("!")
+		}
+		if i {
+			sb.WriteString("]!")
+		}
 		sb.WriteRune('\n')
 	}
 	sb.WriteString("}\n\n")
