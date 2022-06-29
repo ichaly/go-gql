@@ -1,8 +1,11 @@
 package graphql
 
 import (
-	"github.com/ichaly/go-gql/internal/introspection"
+	"github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
+	"log"
 	"reflect"
+	"strings"
 )
 
 type Object struct {
@@ -10,18 +13,25 @@ type Object struct {
 	Name        string // Optional, defaults to Type's name.
 	Description string
 	Type        interface{}
-	Methods     map[string]interface{}
+	Resolvers   map[string]*Object
 }
 
-func (s *Object) Field(name string, method interface{}) {
-	if s.Methods == nil {
-		s.Methods = make(map[string]interface{})
-	}
+type FieldOption interface {
+	apply(*Object)
+}
 
-	if _, ok := s.Methods[name]; ok {
+func (s *Object) Field(name string, resolver interface{}, options ...FieldOption) {
+	if s.Resolvers == nil {
+		s.Resolvers = make(map[string]*Object)
+	}
+	if _, ok := s.Resolvers[name]; ok {
 		panic("duplicate Method")
 	}
-	s.Methods[name] = method
+	m := &Object{Type: resolver}
+	for _, o := range options {
+		o.apply(m)
+	}
+	s.Resolvers[name] = m
 }
 
 type Builder struct {
@@ -79,7 +89,7 @@ func (my *Builder) Object(name string, typ interface{}, options ...ObjectOption)
 	return object
 }
 
-func (my *Builder) MustBuild() *introspection.Schema {
+func (my *Builder) MustBuild() *ast.Schema {
 	schema, err := my.Build()
 	if err != nil {
 		panic(err)
@@ -87,11 +97,60 @@ func (my *Builder) MustBuild() *introspection.Schema {
 	return schema
 }
 
-func (my *Builder) Build() (*introspection.Schema, error) {
-	my.Object("Query", query{})
-	my.Object("Mutation", mutation{})
-	return &introspection.Schema{
-		QueryType:    nil,
-		MutationType: nil,
-	}, nil
+func (my *Builder) Build() (*ast.Schema, error) {
+	sb := &strings.Builder{} // where the (text) schema is generated
+	sb.Grow(256)             // Even simple schemas are at least this big
+
+	sb.WriteString(getSchema(my.Query()))
+
+	log.Print(sb.String())
+
+	return gqlparser.LoadSchema(&ast.Source{
+		Name:  "schema",
+		Input: sb.String(),
+	})
+}
+
+func getDescription(desc string) string {
+	sb := &strings.Builder{}
+	if len(desc) > 0 {
+		sb.WriteString(`"""`)
+		sb.WriteString(desc)
+		sb.WriteString(`"""`)
+		sb.WriteRune('\n')
+	}
+	return sb.String()
+}
+
+func getSchema(o *Object) string {
+	sb := &strings.Builder{}
+	sb.WriteString(getDescription(o.Description))
+
+	sb.WriteString("type ")
+	sb.WriteString(o.Name)
+	sb.WriteString(" { ")
+	sb.WriteRune('\n')
+	for k, v := range o.Resolvers {
+		sb.WriteString(getDescription(v.Description))
+		sb.WriteString(k)
+		sb.WriteString(": ")
+		t := reflect.TypeOf(v.Type)
+		switch t.Kind() {
+		case reflect.Ptr:
+			t = t.Elem() // follow indirection
+		case reflect.Map, reflect.Slice, reflect.Array:
+			t = t.Elem()
+		case reflect.Func:
+			if t.NumOut() == 0 {
+				panic("Resolver func must have at least one return value")
+			}
+			t = t.Out(0)
+		}
+		sb.WriteString(t.Name())
+		sb.WriteRune('\n')
+	}
+	sb.WriteString("}\n\n")
+
+	//sb.WriteString("type Todo {id: ID!}")
+	return sb.String()
 }
