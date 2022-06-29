@@ -17,7 +17,6 @@ type (
 		query    interface{}
 		mutation interface{}
 	}
-
 	TraceTiming struct {
 		Start time.Time
 		End   time.Time
