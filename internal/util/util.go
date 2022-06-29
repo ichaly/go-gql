@@ -3,7 +3,7 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ichaly/go-gql/executor"
+	"github.com/ichaly/go-gql/internal/executor"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"io"
 	"net/http"

@@ -1,8 +1,8 @@
 package transport
 
 import (
-	"github.com/ichaly/go-gql/executor"
-	"github.com/ichaly/go-gql/util"
+	"github.com/ichaly/go-gql/internal/executor"
+	"github.com/ichaly/go-gql/internal/util"
 	"log"
 	"net/http"
 	"strings"

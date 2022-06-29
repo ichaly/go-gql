@@ -1,15 +1,14 @@
 package graphql
 
 import (
-	"github.com/ichaly/go-gql/executor"
-	"github.com/ichaly/go-gql/transport"
-	"github.com/ichaly/go-gql/types"
-	"github.com/ichaly/go-gql/util"
+	"github.com/ichaly/go-gql/internal/executor"
+	transport2 "github.com/ichaly/go-gql/internal/transport"
+	"github.com/ichaly/go-gql/internal/util"
 	"net/http"
 )
 
 type Server struct {
-	transports []types.Transport
+	transports []Transport
 	exec       *executor.Executor
 }
 
@@ -18,18 +17,18 @@ func NewServer() *Server {
 		exec: &executor.Executor{},
 	}
 
-	srv.AddTransport(transport.Options{})
-	srv.AddTransport(transport.GET{})
-	srv.AddTransport(transport.POST{})
+	srv.AddTransport(transport2.Options{})
+	srv.AddTransport(transport2.GET{})
+	srv.AddTransport(transport2.POST{})
 
 	return srv
 }
 
-func (s *Server) AddTransport(transport types.Transport) {
+func (s *Server) AddTransport(transport Transport) {
 	s.transports = append(s.transports, transport)
 }
 
-func (s *Server) getTransport(r *http.Request) types.Transport {
+func (s *Server) getTransport(r *http.Request) Transport {
 	for _, t := range s.transports {
 		if t.Supports(r) {
 			return t
