@@ -1,19 +1,21 @@
 package graphql
 
 import (
+	"github.com/ichaly/go-gql/executor"
 	"github.com/ichaly/go-gql/transport"
 	"github.com/ichaly/go-gql/types"
+	"github.com/ichaly/go-gql/util"
 	"net/http"
 )
 
 type Server struct {
 	transports []types.Transport
-	exec       *types.Executor
+	exec       *executor.Executor
 }
 
 func NewServer() *Server {
 	srv := &Server{
-		exec: &types.Executor{},
+		exec: &executor.Executor{},
 	}
 
 	srv.AddTransport(transport.Options{})
@@ -39,7 +41,7 @@ func (s *Server) getTransport(r *http.Request) types.Transport {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			types.SendErrorf(w, http.StatusUnprocessableEntity, "internal system error")
+			util.SendErrorf(w, http.StatusUnprocessableEntity, "internal system error")
 		}
 	}()
 
@@ -48,5 +50,5 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	types.SendErrorf(w, http.StatusBadRequest, "transport not supported")
+	util.SendErrorf(w, http.StatusBadRequest, "transport not supported")
 }

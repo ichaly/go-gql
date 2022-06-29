@@ -2,8 +2,11 @@ package util
 
 import (
 	"encoding/json"
-	"github.com/ichaly/go-gql/types"
+	"fmt"
+	"github.com/ichaly/go-gql/executor"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"io"
+	"net/http"
 	"time"
 )
 
@@ -15,8 +18,21 @@ func ReadJson(r io.Reader, val interface{}) error {
 	return dec.Decode(val)
 }
 
-func WriteJson(w io.Writer, response *types.GqlResult) {
-	b, err := json.Marshal(response)
+func WriteJson(w io.Writer, res *executor.GqlResult) {
+	b, err := json.Marshal(res)
+	if err != nil {
+		panic(err)
+	}
+	_, _ = w.Write(b)
+}
+
+func SendErrorf(w http.ResponseWriter, code int, format string, args ...interface{}) {
+	SendError(w, code, &gqlerror.Error{Message: fmt.Sprintf(format, args...)})
+}
+
+func SendError(w http.ResponseWriter, code int, errors ...*gqlerror.Error) {
+	w.WriteHeader(code)
+	b, err := json.Marshal(&executor.GqlResult{Errors: errors})
 	if err != nil {
 		panic(err)
 	}

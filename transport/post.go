@@ -2,8 +2,8 @@ package transport
 
 import (
 	"github.com/ichaly/go-gql/executor"
-	"github.com/ichaly/go-gql/types"
 	"github.com/ichaly/go-gql/util"
+	"log"
 	"mime"
 	"net/http"
 )
@@ -29,17 +29,18 @@ func (h POST) Do(w http.ResponseWriter, r *http.Request, exec *executor.Executor
 	w.Header().Set("Content-Type", "application/json")
 
 	start := util.Now()
-	var params *types.GqlRequest
+	var params *executor.GqlRequest
 	if err := util.ReadJson(r.Body, &params); err != nil {
-		types.SendErrorf(w, http.StatusBadRequest, "json body could not be decoded: "+err.Error())
+		util.SendErrorf(w, http.StatusBadRequest, "json body could not be decoded: "+err.Error())
 		return
 	}
 	params.Headers = r.Header
-	params.ReadTime = types.TraceTiming{
+	params.ReadTime = executor.TraceTiming{
 		Start: start,
 		End:   util.Now(),
 	}
-
+	res := exec.Exec(r.Context(), params)
+	log.Fatalf("%v", res)
 	//rc, err := exec.CreateOperationContext(r.Context(), params)
 	//if err != nil {
 	//	w.WriteHeader(statusFor(err))

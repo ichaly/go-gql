@@ -2,22 +2,45 @@ package executor
 
 import (
 	"context"
-	"github.com/ichaly/go-gql/types"
+	"encoding/json"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
+	"net/http"
+	"time"
 )
 
-type Executor struct {
-	schema   *ast.Schema
-	query    interface{}
-	mutation interface{}
-}
+type (
+	Executor struct {
+		schema   *ast.Schema
+		query    interface{}
+		mutation interface{}
+	}
 
-func (my *Executor) CreateOperationContext(
-	ctx context.Context, req *types.GqlRequest,
-) (r types.GqlResult) {
+	TraceTiming struct {
+		Start time.Time
+		End   time.Time
+	}
+	GqlRequest struct {
+		Query         string                 `json:"query"`
+		OperationName string                 `json:"operationName"`
+		Variables     map[string]interface{} `json:"variables"`
+		Extensions    map[string]interface{} `json:"extensions"`
+		Headers       http.Header            `json:"headers"`
+
+		ReadTime TraceTiming `json:"-"`
+	}
+	GqlResult struct {
+		Data       json.RawMessage        `json:"data,omitempty"`
+		Errors     gqlerror.List          `json:"errors,omitempty"`
+		Extensions map[string]interface{} `json:"extensions,omitempty"`
+	}
+)
+
+func (my *Executor) Exec(
+	ctx context.Context, req *GqlRequest,
+) (r GqlResult) {
 	doc, err := parser.ParseQuery(&ast.Source{Input: req.Query})
 	if err != nil {
 		r.Errors = append(r.Errors, err)

@@ -2,7 +2,7 @@ package graphql
 
 import (
 	"context"
-	"github.com/ichaly/go-gql/types"
+	"github.com/ichaly/go-gql/executor"
 )
 
 type Schema struct {
@@ -13,6 +13,6 @@ func (s *Schema) Exec(
 	queryString string,
 	operationName string,
 	variables map[string]interface{},
-) *types.GqlResult {
+) *executor.GqlResult {
 	return nil
 }
