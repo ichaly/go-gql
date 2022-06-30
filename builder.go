@@ -114,6 +114,7 @@ func (my *Builder) MustBuild() *ast.Schema {
 
 func (my *Builder) Build() (*ast.Schema, *gqlerror.Error) {
 	sb := &strings.Builder{}
+	sb.WriteString("scalar Any\n\n")
 
 	for _, o := range my.objects {
 		sb.WriteString(my.getSchema(o))
@@ -139,6 +140,14 @@ func (my *Builder) getDescription(desc string) string {
 
 var (
 	scalars = map[reflect.Kind]*Object{
+		reflect.Int: {
+			Name:        "Int",
+			Description: "The Int scalar type represents a signed 32‐bit numeric non‐fractional value.",
+		},
+		reflect.Float64: {
+			Name:        "Float",
+			Description: "The Float scalar type represents signed double‐precision fractional values as specified by IEEE 754.",
+		},
 		reflect.Bool: {
 			Name:        "Boolean",
 			Description: "The `Boolean` scalar type represents `true` or `false`.",
@@ -147,14 +156,25 @@ var (
 			Name:        "String",
 			Description: "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
 		},
+		reflect.Interface: {
+			Name:        "Any",
+			Description: "The `Any` scalar type represents interface{}.",
+		},
 	}
 )
 
 func (my *Builder) getType(t reflect.Type) (result *Object, nullable bool, iterable bool) {
 	for {
 		switch t.Kind() {
-		case reflect.Bool, reflect.String:
+		case reflect.Bool, reflect.String, reflect.Interface:
 			result = scalars[t.Kind()]
+			return
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			result = scalars[reflect.Int]
+			return
+		case reflect.Float32, reflect.Float64:
+			result = scalars[reflect.Float64]
 			return
 		case reflect.Struct:
 			result = my.Object(reflect.New(t).Elem().Interface())
@@ -183,8 +203,8 @@ func (my *Builder) getSchema(o *Object) string {
 	sb.WriteString(" {")
 	sb.WriteRune('\n')
 	for k, v := range o.Resolvers {
-		t, n, i := my.getType(reflect.TypeOf(v.Type))
-		if t == nil {
+		o, n, i := my.getType(reflect.TypeOf(v.Type))
+		if o == nil {
 			continue
 		}
 		sb.WriteString(my.getDescription(v.Description))
@@ -194,7 +214,11 @@ func (my *Builder) getSchema(o *Object) string {
 		if i {
 			sb.WriteString("[")
 		}
-		sb.WriteString(t.Name)
+		if k == "ID" || o.key == k {
+			sb.WriteString("ID")
+		} else {
+			sb.WriteString(o.Name)
+		}
 		if n {
 			sb.WriteString("!")
 		}
