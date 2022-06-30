@@ -1,9 +1,10 @@
 package graphql
 
 import (
+	"fmt"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"log"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"reflect"
 	"strings"
 )
@@ -97,14 +98,13 @@ func (my *Builder) MustBuild() *ast.Schema {
 	return schema
 }
 
-func (my *Builder) Build() (*ast.Schema, error) {
+func (my *Builder) Build() (*ast.Schema, *gqlerror.Error) {
 	sb := &strings.Builder{} // where the (text) schema is generated
 	sb.Grow(256)             // Even simple schemas are at least this big
 
 	sb.WriteString(getSchema(my.Query()))
 
-	log.Print(sb.String())
-
+	fmt.Println(sb.String())
 	return gqlparser.LoadSchema(&ast.Source{
 		Name:  "schema",
 		Input: sb.String(),
@@ -123,25 +123,24 @@ func getDescription(desc string) string {
 }
 
 func getType(t reflect.Type) (result reflect.Type, nullable bool, iterable bool) {
-	switch t.Kind() {
-	case reflect.Struct:
-		result = t
-		return
-	case reflect.Ptr:
-		result = t.Elem()
-		nullable = true
-		return
-	case reflect.Map, reflect.Slice, reflect.Array:
-		result = t.Elem()
-		iterable = true
-		return
-	case reflect.Func:
-		if t.NumOut() == 0 {
-			panic("Resolver func must have at least one return value")
+	for {
+		switch t.Kind() {
+		case reflect.Struct:
+			result = t
+			return
+		case reflect.Ptr:
+			t = t.Elem()
+			nullable = true
+		case reflect.Map, reflect.Slice, reflect.Array:
+			t = t.Elem()
+			iterable = true
+		case reflect.Func:
+			if t.NumOut() == 0 {
+				panic("Resolver func must have at least one return value")
+			}
+			t = t.Out(0)
 		}
-		return getType(t.Out(0))
 	}
-	return
 }
 
 func getSchema(o *Object) string {
@@ -150,7 +149,7 @@ func getSchema(o *Object) string {
 
 	sb.WriteString("type ")
 	sb.WriteString(o.Name)
-	sb.WriteString(" { ")
+	sb.WriteString(" {")
 	sb.WriteRune('\n')
 	for k, v := range o.Resolvers {
 		t, n, i := getType(reflect.TypeOf(v.Type))
@@ -158,6 +157,7 @@ func getSchema(o *Object) string {
 			continue
 		}
 		sb.WriteString(getDescription(v.Description))
+		sb.WriteString("  ")
 		sb.WriteString(k)
 		sb.WriteString(": ")
 		if i {
@@ -172,8 +172,8 @@ func getSchema(o *Object) string {
 		}
 		sb.WriteRune('\n')
 	}
-	sb.WriteString("}\n\n")
+	sb.WriteString("}\n")
 
-	//sb.WriteString("type Todo {id: ID!}")
+	sb.WriteString("type Todo {id: ID!}")
 	return sb.String()
 }

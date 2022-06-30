@@ -12,8 +12,17 @@ type Todo struct {
 func TestBuild(t *testing.T) {
 	builder := NewBuilder()
 	q := builder.Query()
-	q.Field("todos", func() Todo {
+	q.Field("ptrs", func() []*Todo {
+		return []*Todo{}
+	})
+	q.Field("todo", func() Todo {
 		return Todo{}
+	})
+	q.Field("ptr", func() *Todo {
+		return &Todo{}
+	})
+	q.Field("todos", func() []Todo {
+		return []Todo{}
 	})
 	log.Printf("%v", builder.MustBuild())
 }
