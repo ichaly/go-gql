@@ -57,25 +57,35 @@ func NewBuilder(options ...BuildOption) *Builder {
 type query struct{}
 
 func (my *Builder) Query() *Object {
-	return my.Object("Query", query{})
+	return my.Object(query{}, WithName("Query"))
 }
 
 type mutation struct{}
 
 func (my *Builder) Mutation() *Object {
-	return my.Object("Mutation", mutation{})
+	return my.Object(mutation{}, WithName("Mutation"))
 }
 
-type ObjectOption interface {
-	apply(*Builder, *Object)
+type objectOption func(*Builder, *Object)
+
+func WithName(name string) objectOption {
+	return func(b *Builder, o *Object) {
+		o.Name = name
+	}
 }
 
-func (my *Builder) Object(name string, typ interface{}, options ...ObjectOption) *Object {
+func (my *Builder) Object(typ interface{}, options ...objectOption) *Object {
 	if object, ok := my.objects[reflect.TypeOf(typ)]; ok {
 		if reflect.TypeOf(object.Type) != reflect.TypeOf(typ) {
 			panic("re-registered object with different type")
 		}
 		return object
+	}
+	var name string
+	if v, ok := typ.(reflect.Type); ok {
+		name = v.Name()
+	} else {
+		name = reflect.TypeOf(typ).Name()
 	}
 	object := &Object{
 		Name: name,
@@ -84,7 +94,7 @@ func (my *Builder) Object(name string, typ interface{}, options ...ObjectOption)
 	my.objects[reflect.TypeOf(typ)] = object
 
 	for _, o := range options {
-		o.apply(my, object)
+		o(my, object)
 	}
 
 	return object
@@ -99,10 +109,11 @@ func (my *Builder) MustBuild() *ast.Schema {
 }
 
 func (my *Builder) Build() (*ast.Schema, *gqlerror.Error) {
-	sb := &strings.Builder{} // where the (text) schema is generated
-	sb.Grow(256)             // Even simple schemas are at least this big
+	sb := &strings.Builder{}
 
-	sb.WriteString(getSchema(my.Query()))
+	for _, o := range my.objects {
+		sb.WriteString(my.getSchema(o))
+	}
 
 	fmt.Println(sb.String())
 	return gqlparser.LoadSchema(&ast.Source{
@@ -111,7 +122,7 @@ func (my *Builder) Build() (*ast.Schema, *gqlerror.Error) {
 	})
 }
 
-func getDescription(desc string) string {
+func (my *Builder) getDescription(desc string) string {
 	sb := &strings.Builder{}
 	if len(desc) > 0 {
 		sb.WriteString(`"""`)
@@ -122,11 +133,12 @@ func getDescription(desc string) string {
 	return sb.String()
 }
 
-func getType(t reflect.Type) (result reflect.Type, nullable bool, iterable bool) {
+func (my *Builder) getType(t reflect.Type) (result reflect.Type, nullable bool, iterable bool) {
 	for {
 		switch t.Kind() {
 		case reflect.Struct:
 			result = t
+			my.Object(result)
 			return
 		case reflect.Ptr:
 			t = t.Elem()
@@ -143,20 +155,20 @@ func getType(t reflect.Type) (result reflect.Type, nullable bool, iterable bool)
 	}
 }
 
-func getSchema(o *Object) string {
+func (my *Builder) getSchema(o *Object) string {
 	sb := &strings.Builder{}
-	sb.WriteString(getDescription(o.Description))
+	sb.WriteString(my.getDescription(o.Description))
 
 	sb.WriteString("type ")
 	sb.WriteString(o.Name)
 	sb.WriteString(" {")
 	sb.WriteRune('\n')
 	for k, v := range o.Resolvers {
-		t, n, i := getType(reflect.TypeOf(v.Type))
+		t, n, i := my.getType(reflect.TypeOf(v.Type))
 		if t == nil {
 			continue
 		}
-		sb.WriteString(getDescription(v.Description))
+		sb.WriteString(my.getDescription(v.Description))
 		sb.WriteString("  ")
 		sb.WriteString(k)
 		sb.WriteString(": ")
@@ -174,6 +186,5 @@ func getSchema(o *Object) string {
 	}
 	sb.WriteString("}\n")
 
-	sb.WriteString("type Todo {id: ID!}")
 	return sb.String()
 }
