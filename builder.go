@@ -96,6 +96,11 @@ func (my *Builder) Object(obj interface{}, options ...objectOption) *Object {
 		o(my, object)
 	}
 
+	for i := 0; i < typ.NumField(); i++ {
+		sf := typ.Field(i)
+		object.Field(sf.Name, reflect.New(sf.Type).Elem().Interface())
+	}
+
 	return object
 }
 
@@ -132,15 +137,27 @@ func (my *Builder) getDescription(desc string) string {
 	return sb.String()
 }
 
-func (my *Builder) getType(t reflect.Type) (result reflect.Type, nullable bool, iterable bool) {
+var (
+	scalars = map[reflect.Kind]*Object{
+		reflect.Bool: {
+			Name:        "Boolean",
+			Description: "The `Boolean` scalar type represents `true` or `false`.",
+		},
+		reflect.String: {
+			Name:        "String",
+			Description: "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
+		},
+	}
+)
+
+func (my *Builder) getType(t reflect.Type) (result *Object, nullable bool, iterable bool) {
 	for {
 		switch t.Kind() {
-		case reflect.String:
-			result = t
+		case reflect.Bool, reflect.String:
+			result = scalars[t.Kind()]
 			return
 		case reflect.Struct:
-			result = t
-			my.Object(reflect.New(result).Elem().Interface())
+			result = my.Object(reflect.New(t).Elem().Interface())
 			return
 		case reflect.Ptr:
 			t = t.Elem()
@@ -177,7 +194,7 @@ func (my *Builder) getSchema(o *Object) string {
 		if i {
 			sb.WriteString("[")
 		}
-		sb.WriteString(t.Name())
+		sb.WriteString(t.Name)
 		if n {
 			sb.WriteString("!")
 		}

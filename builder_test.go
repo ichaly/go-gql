@@ -6,7 +6,8 @@ import (
 )
 
 type Todo struct {
-	ID string
+	ID     *string
+	Finish bool
 }
 
 func TestBuild(t *testing.T) {
