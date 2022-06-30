@@ -57,7 +57,7 @@ func NewBuilder(options ...BuildOption) *Builder {
 type query struct{}
 
 func (my *Builder) Query() *Object {
-	return my.Object(query{}, WithName("Query"))
+	return my.Object(&query{}, WithName("Query"))
 }
 
 type mutation struct{}
@@ -74,24 +74,23 @@ func WithName(name string) objectOption {
 	}
 }
 
-func (my *Builder) Object(typ interface{}, options ...objectOption) *Object {
-	if object, ok := my.objects[reflect.TypeOf(typ)]; ok {
-		if reflect.TypeOf(object.Type) != reflect.TypeOf(typ) {
+func (my *Builder) Object(obj interface{}, options ...objectOption) *Object {
+	typ := reflect.TypeOf(obj)
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+		obj = reflect.ValueOf(obj).Elem().Interface()
+	}
+	if object, ok := my.objects[typ]; ok {
+		if reflect.TypeOf(object.Type) != typ {
 			panic("re-registered object with different type")
 		}
 		return object
 	}
-	var name string
-	if v, ok := typ.(reflect.Type); ok {
-		name = v.Name()
-	} else {
-		name = reflect.TypeOf(typ).Name()
-	}
 	object := &Object{
-		Name: name,
-		Type: typ,
+		Name: typ.Name(),
+		Type: obj,
 	}
-	my.objects[reflect.TypeOf(typ)] = object
+	my.objects[typ] = object
 
 	for _, o := range options {
 		o(my, object)
@@ -136,9 +135,12 @@ func (my *Builder) getDescription(desc string) string {
 func (my *Builder) getType(t reflect.Type) (result reflect.Type, nullable bool, iterable bool) {
 	for {
 		switch t.Kind() {
+		case reflect.String:
+			result = t
+			return
 		case reflect.Struct:
 			result = t
-			my.Object(result)
+			my.Object(reflect.New(result).Elem().Interface())
 			return
 		case reflect.Ptr:
 			t = t.Elem()
@@ -184,7 +186,7 @@ func (my *Builder) getSchema(o *Object) string {
 		}
 		sb.WriteRune('\n')
 	}
-	sb.WriteString("}\n")
+	sb.WriteString("}\n\n")
 
 	return sb.String()
 }
