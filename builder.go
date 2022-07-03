@@ -11,9 +11,9 @@ import (
 
 type Object struct {
 	key         string // Optional, defaults 'ID'.
-	Name        string // Optional, defaults to Type's name.
+	Name        string // Optional, defaults to Value's name.
 	Description string
-	Type        interface{}
+	Value       interface{}
 	Fields      map[string]*Object
 }
 
@@ -21,18 +21,18 @@ type FieldOption interface {
 	apply(*Object)
 }
 
-func (s *Object) Field(name string, resolver interface{}, options ...FieldOption) {
+func (s *Object) Field(name string, value interface{}, options ...FieldOption) {
 	if s.Fields == nil {
 		s.Fields = make(map[string]*Object)
 	}
 	if _, ok := s.Fields[name]; ok {
 		panic("duplicate Field")
 	}
-	m := &Object{Type: resolver}
+	obj := &Object{Value: value}
 	for _, o := range options {
-		o.apply(m)
+		o.apply(obj)
 	}
-	s.Fields[name] = m
+	s.Fields[name] = obj
 }
 
 type Builder struct {
@@ -66,29 +66,29 @@ func (my *Builder) Mutation() *Object {
 	return my.Object(mutation{}, WithName("Mutation"))
 }
 
-type objectOption func(*Builder, *Object)
+type ObjectOption func(*Builder, *Object)
 
-func WithName(name string) objectOption {
+func WithName(name string) ObjectOption {
 	return func(b *Builder, o *Object) {
 		o.Name = name
 	}
 }
 
-func (my *Builder) Object(obj interface{}, options ...objectOption) *Object {
-	typ := reflect.TypeOf(obj)
+func (my *Builder) Object(value interface{}, options ...ObjectOption) *Object {
+	typ := reflect.TypeOf(value)
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
-		obj = reflect.ValueOf(obj).Elem().Interface()
+		value = reflect.ValueOf(value).Elem().Interface()
 	}
 	if object, ok := my.objects[typ]; ok {
-		if reflect.TypeOf(object.Type) != typ {
+		if reflect.TypeOf(object.Value) != typ {
 			panic("re-registered object with different type")
 		}
 		return object
 	}
 	object := &Object{
-		Name: typ.Name(),
-		Type: obj,
+		Name:  typ.Name(),
+		Value: value,
 	}
 	my.objects[typ] = object
 
@@ -203,7 +203,7 @@ func (my *Builder) getSchema(o *Object) string {
 	sb.WriteString(" {")
 	sb.WriteRune('\n')
 	for k, v := range o.Fields {
-		o, n, i := my.getType(reflect.TypeOf(v.Type))
+		o, n, i := my.getType(reflect.TypeOf(v.Value))
 		if o == nil {
 			continue
 		}
