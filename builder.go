@@ -17,24 +17,6 @@ type Object struct {
 	Fields      map[string]*Object
 }
 
-type FieldOption interface {
-	apply(*Object)
-}
-
-func (s *Object) Field(name string, value interface{}, options ...FieldOption) {
-	if s.Fields == nil {
-		s.Fields = make(map[string]*Object)
-	}
-	if _, ok := s.Fields[name]; ok {
-		panic("duplicate Field")
-	}
-	obj := &Object{Value: value}
-	for _, o := range options {
-		o.apply(obj)
-	}
-	s.Fields[name] = obj
-}
-
 type Builder struct {
 	Name    string
 	objects map[reflect.Type]*Object
@@ -80,6 +62,9 @@ func (my *Builder) Object(value interface{}, options ...ObjectOption) *Object {
 		typ = typ.Elem()
 		value = reflect.ValueOf(value).Elem().Interface()
 	}
+	if typ.Kind() != reflect.Struct {
+		panic("object only can be set a struct or struct pointer")
+	}
 	if object, ok := my.objects[typ]; ok {
 		if reflect.TypeOf(object.Value) != typ {
 			panic("re-registered object with different type")
@@ -104,6 +89,24 @@ func (my *Builder) Object(value interface{}, options ...ObjectOption) *Object {
 	return object
 }
 
+type FieldOption interface {
+	apply(*Object)
+}
+
+func (s *Object) Field(name string, value interface{}, options ...FieldOption) {
+	if s.Fields == nil {
+		s.Fields = make(map[string]*Object)
+	}
+	if _, ok := s.Fields[name]; ok {
+		panic("duplicate Field")
+	}
+	obj := &Object{Value: value}
+	for _, o := range options {
+		o.apply(obj)
+	}
+	s.Fields[name] = obj
+}
+
 func (my *Builder) MustBuild() *ast.Schema {
 	schema, err := my.Build()
 	if err != nil {
@@ -121,10 +124,11 @@ func (my *Builder) Build() (*ast.Schema, *gqlerror.Error) {
 	}
 
 	fmt.Println(sb.String())
-	return gqlparser.LoadSchema(&ast.Source{
+	s, e := gqlparser.LoadSchema(&ast.Source{
 		Name:  "schema",
 		Input: sb.String(),
 	})
+	return s, e
 }
 
 func (my *Builder) getDescription(desc string) string {
