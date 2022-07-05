@@ -3,14 +3,17 @@ package graphql
 import (
 	"log"
 	"testing"
+	"time"
 )
 
 type Todo struct {
 	Finish bool
 	Owner  *User
 	Data   *interface{}
+	Tags   []string
+	Extra  map[string]int64
 	//Api EntryPoint
-	//createTime time.Time
+	createTime time.Time
 }
 
 type User struct {
@@ -26,14 +29,14 @@ func TestBuild(t *testing.T) {
 	q.Field("todo", func() Todo {
 		return Todo{}
 	})
-	q.Field("todos", func() []Todo {
-		return []Todo{}
-	})
-	q.Field("ptr", func() *Todo {
-		return &Todo{}
-	})
-	q.Field("ptrs", func() []*Todo {
-		return []*Todo{}
-	})
+	//q.Field("todos", func() []Todo {
+	//	return []Todo{}
+	//})
+	//q.Field("ptr", func() *Todo {
+	//	return &Todo{}
+	//})
+	//q.Field("ptrs", func() []*Todo {
+	//	return []*Todo{}
+	//})
 	log.Printf("%v", builder.MustBuild())
 }
