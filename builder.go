@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"fmt"
+	"github.com/ichaly/go-gql/internal/scalar"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -19,6 +20,7 @@ type Object struct {
 
 type Builder struct {
 	Name    string
+	scalars map[string]*Object
 	objects map[reflect.Type]*Object
 }
 
@@ -28,12 +30,30 @@ type BuildOption interface {
 
 func NewBuilder(options ...BuildOption) *Builder {
 	builder := &Builder{
+		scalars: make(map[string]*Object),
 		objects: make(map[reflect.Type]*Object),
 	}
+
+	builder.Scalar("Any", scalar.Any{})
+	builder.Scalar("Time", scalar.Time{})
+	builder.Scalar("File", scalar.File{})
+
 	for _, o := range options {
 		o.apply(builder)
 	}
 	return builder
+}
+
+func (my *Builder) Scalar(name string, value interface{}) *Object {
+	if object, ok := my.scalars[name]; ok {
+		return object
+	}
+	object := &Object{
+		Name:  name,
+		Value: value,
+	}
+	my.scalars[name] = object
+	return object
 }
 
 type query struct{}
@@ -117,8 +137,13 @@ func (my *Builder) MustBuild() *ast.Schema {
 
 func (my *Builder) Build() (*ast.Schema, *gqlerror.Error) {
 	sb := &strings.Builder{}
-	sb.WriteString("scalar Any\n\n")
-	sb.WriteString("scalar Time\n\n")
+
+	for k, _ := range my.scalars {
+		sb.WriteString("scalar ")
+		sb.WriteString(k)
+		sb.WriteRune('\n')
+	}
+	sb.WriteRune('\n')
 
 	for _, o := range my.objects {
 		sb.WriteString(my.getSchema(o))
@@ -168,8 +193,8 @@ func (my *Builder) getName(obj *Object) (result string) {
 			result = fmt.Sprintf(result, "ID")
 			return
 		}
-		if t.Name() == "Time" {
-			result = fmt.Sprintf(result, "Time")
+		if _, ok := my.scalars[t.Name()]; ok {
+			result = t.Name()
 			return
 		}
 		switch k {
